@@ -117,6 +117,9 @@ call dein#add('davidhalter/jedi-vim')
 call dein#add('rking/ag.vim')
 call dein#add('suan/vim-instant-markdown')
 call dein#add('dhruvasagar/vim-table-mode')
+call dein#add('wlangstroth/vim-racket')
+call dein#add('aharisu/vim_goshrepl')
+call dein#add('aharisu/vim-gdev')
 
 " Required:
 call dein#end()
@@ -173,6 +176,9 @@ endif
 
 " 環境変数RSENSE_HOMEに'/usr/local/bin/rsense'を指定しても動く
 let g:neocomplete#sources#rsense#home_directory = '/usr/local/bin/rsense'
+
+" gosh用
+"let g:neocomplete#keyword_patterns['gosh-repl'] = '[[:alpha:]+*/@$_=.!?-][[:alnum:]+*/@$_:=.!?-]*'
 
 " evervim
 "let g:evervim_devtoken='S=s57:U=615767:E=15cc7f69d9c:C=155704570d8:P=1cd:A=en-devtoken:V=2:H=1c9cb3a05581836dd28e7df6d1d890bc'
@@ -350,4 +356,53 @@ let g:memolist_delimiter_yaml_end  = "---"
 set backupskip=/tmp/*,/private/tmp/*
 
 let g:table_mode_corner = '|'
+
+" controlキーとeを押すことNERDTreeコマンドのショートカットキーとして作動する
+nnoremap <silent><C-e> :NERDTreeToggle<CR>
+
+" Anywhere SID.
+function! s:SID_PREFIX()
+    return matchstr(expand('<sfile>'), '<SNR>\d\+_\zeSID_PREFIX$')
+endfunction
+
+" Set tabline.
+function! s:my_tabline()  "{{{
+    let s = ''
+    for i in range(1, tabpagenr('$'))
+        let bufnrs = tabpagebuflist(i)
+        let bufnr = bufnrs[tabpagewinnr(i) - 1]  " first window, first appears
+        let no = i  " display 0-origin tabpagenr.
+        let mod = getbufvar(bufnr, '&modified') ? '!' : ' '
+        let title = fnamemodify(bufname(bufnr), ':t')
+        let title = '[' . title . ']'
+        let s .= '%'.i.'T'
+        let s .= '%#' . (i == tabpagenr() ? 'TabLineSel' : 'TabLine') . '#'
+        let s .= no . ':' . title
+        let s .= mod
+        let s .= '%#TabLineFill# '
+    endfor
+    let s .= '%#TabLineFill#%T%=%#TabLine#'
+    return s
+endfunction "}}}
+let &tabline = '%!'. s:SID_PREFIX() . 'my_tabline()'
+set showtabline=2 " 常にタブラインを表示
+
+" The prefix key.
+nnoremap    [Tag]   <Nop>
+nmap    t [Tag]
+
+" Tab jump
+for n in range(1, 9)
+    execute 'nnoremap <silent> [Tag]'.n  ':<C-u>tabnext'.n.'<CR>'
+endfor
+
+" t1 で1番左のタブ、t2 で1番左から2番目のタブにジャンプ
+map <silent> [Tag]c :tablast <bar> tabnew<CR>
+" tc 新しいタブを一番右に作る
+map <silent> [Tag]x :tabclose<CR>
+" tx タブを閉じる
+map <silent> [Tag]n :tabnext<CR>
+" tn 次のタブ
+map <silent> [Tag]p :tabprevious<CR>
+" tp 前のタブ
 
